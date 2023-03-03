@@ -9,7 +9,6 @@ fn main() {
         .arg(arg!([url] "要下载的视频的 av|bv|BV|ep|ss|地址"))
         .subcommand(Command::new("login").about("login by QR code"))
         .get_matches();
-
     // You can check the value provided by positional arguments, or option arguments
     if let Some(name) = matches.get_one::<String>("url") {
         println!("Value for name: {}", name);

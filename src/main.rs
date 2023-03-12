@@ -5,6 +5,7 @@ use clap::{arg, command, Command};
 
 fn main() {
     env_logger ::init();
+    log::debug!("running");
     let matches = command!() // requires `cargo` feature
         .arg(arg!([url] "要下载的视频的 av|bv|BV|ep|ss|地址"))
         .subcommand(Command::new("login").about("login by QR code"))

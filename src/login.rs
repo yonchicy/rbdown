@@ -3,6 +3,7 @@ use qrcode::{ QrCode,render::unicode };
 use reqwest;
 use serde_json;
 use std::collections::HashMap;
+use std::io::Write;
 use std::{thread, time};
 use url::{ParseError, Url, UrlQuery};
 
@@ -51,6 +52,8 @@ pub fn loggin() -> Result<(), ParseError> {
                 let pairs:HashMap<String,String> = back_url.query_pairs().into_owned().collect();
                 let SESSDATA = pairs["SESSDATA"].as_str();
                 log::debug!("SESSDATA : {}",SESSDATA);
+                let mut file = std::fs::File::create("./target/sessdata.txt").unwrap();
+                file.write_all(SESSDATA.as_bytes()).expect("写入cookie失败");
                 break
             }
 

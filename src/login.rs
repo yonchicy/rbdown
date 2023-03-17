@@ -5,6 +5,7 @@ use serde_json;
 use std::collections::HashMap;
 use std::io::Write;
 use std::{thread, time};
+use 
 use url::{ParseError, Url, UrlQuery};
 
 pub fn loggin() -> Result<(), ParseError> {
@@ -87,6 +88,14 @@ fn getLoginStatus(qrcode: &str) -> String {
             .unwrap().to_string();
             
     log::debug!("向扫码服务器发送的url为{}",send_url);
-    let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
-    ret_txt
+    // let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
+    let client = reqwest::blocking::Client::builder().cookie_store(true).build().unwrap();
+    let res = client.get(send_url).send().unwrap();
+    
+    
+    for cookie in res.cookies(){
+        println!("{}",cookie.)
+    }
+    log::debug!("{:#?}",res);
+    res.text().unwrap()
 }

@@ -1,14 +1,18 @@
+use std::fmt::Debug;
+
 use log;
 mod login;
 mod downloader;
+mod client;
 
 use clap::{arg, command, Command};
 
-use crate::downloader::download_vedio;
+use crate::{downloader::download_vedio, client::Client, login::login_by_qrcode};
 
 fn main() {
     env_logger ::init();
     log::debug!("running");
+    let client :Client= Default::default();
     let matches = command!() // requires `cargo` feature
         .arg(arg!([url] "要下载的视频的 bv 地址"))
         .subcommand(Command::new("login").about("login by QR code"))
@@ -16,7 +20,7 @@ fn main() {
     // You can check the value provided by positional arguments, or option arguments
     match matches.subcommand() {
         Some(("login",_)) => {
-            login::loggin();
+            login_by_qrcode(client);
         },
         _ => {}
     }

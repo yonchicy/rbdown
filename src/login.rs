@@ -40,3 +40,13 @@ pub fn login_by_qrcode(client: Client) -> Result<LoginInfo> {
     // Ok(())
 }
 
+
+// fn getLoginStatus(qrcode: &str) -> String {
+//     let queryUrl = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll";
+//     let send_url =  Url::parse_with_params(queryUrl, &[("qrcode_key", qrcode)])
+//             .unwrap().to_string();
+            
+//     log::debug!("向扫码服务器发送的url为{}",send_url);
+//     let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
+//     ret_txt
+// }

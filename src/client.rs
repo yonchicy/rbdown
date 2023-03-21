@@ -5,6 +5,7 @@ use reqwest::header;
 use reqwest_cookie_store::CookieStoreMutex;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::sync::Arc;
 use std::time::Duration;
@@ -43,27 +44,27 @@ impl Client {
     }
     pub fn check_qrcode_status(&self, value: Value) -> Result<LoginInfo> {
         let queryUrl = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll";
-        let mut form = json!({
+        log::debug!("value : {:#?}",value);
+        // log::debug!("qrcode_key : {:#?}",value["data"]["qrcode_key"]);
+        let form = json!({
             "qrcode_key":value["data"]["qrcode_key"]
         });
         loop {
             // log::debug!("向扫码服务器发送的url为{}", send_url);
             // let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
             std::thread::sleep(core::time::Duration::from_millis(1000));
-
-            let res :Value = self.client.get(queryUrl).form(&form).send()?.json()?;
-            let data:ResponseData = res["data"];
-            log::debug!("{:#?}",res);
-            match res {
-                ResponseData {
-                    code: 0,
-                    data: ResponseValue::Login(info),
-                    ..
-                } => {
+            log::debug!("尝试获取二维码扫描结果");
+            let res: ResponseData = self.client.get(queryUrl).query(&form).send()?.json()?;
+            log::debug!("{:#?}", res);
+            assert_eq!(res.code,0);
+            let data = res.data;
+            log::debug!("{:#?}", data);
+            match data {
+                LoginInfo { code: 0, .. } => {
                     log::debug!("扫码成功");
-                    return Ok(info);
+                    return Ok(data);
                 }
-                ResponseData { code: 86038, .. } => {
+                LoginInfo { code: 86038, .. } => {
                     bail!("二维码已失效")
                 }
                 _ => {
@@ -84,9 +85,11 @@ impl Client {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct LoginInfo {
-    cookie_info: serde_json::Value,
-    sso: Vec<String>,
-    pub token_info: TokenInfo,
+    url: String,
+    refresh_token: String,
+    timestamp: u32,
+    pub code: i32,
+    message: String, // pub token_info: TokenInfo,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct TokenInfo {
@@ -99,9 +102,8 @@ pub struct TokenInfo {
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct ResponseData {
     pub code: i32,
-    pub data: ResponseValue,
+    pub data: LoginInfo,
     message: String,
-    ttl: u8,
 }
 
 impl Display for ResponseData {
@@ -110,12 +112,12 @@ impl Display for ResponseData {
     }
 }
 
-#[derive(Deserialize, Serialize, Debug, Clone)]
-#[serde(untagged)]
-pub enum ResponseValue {
-    Login(LoginInfo),
-    Value(serde_json::Value),
-}
+// #[derive(Deserialize, Serialize, Debug, Clone)]
+// #[serde(untagged)]
+// pub enum ResponseValue {
+//     Login(LoginInfo),
+//     Value(serde_json::Value),
+// }
 impl Default for Client {
     fn default() -> Self {
         Self::new()

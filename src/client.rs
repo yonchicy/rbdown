@@ -1,4 +1,5 @@
 use anyhow::{bail, Result};
+use cookie::Cookie;
 use reqwest::cookie::CookieStore;
 use reqwest::dns::Resolve;
 use reqwest::header;
@@ -44,7 +45,7 @@ impl Client {
     }
     pub fn check_qrcode_status(&self, value: Value) -> Result<LoginInfo> {
         let queryUrl = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll";
-        log::debug!("value : {:#?}",value);
+        log::debug!("value : {:#?}", value);
         // log::debug!("qrcode_key : {:#?}",value["data"]["qrcode_key"]);
         let form = json!({
             "qrcode_key":value["data"]["qrcode_key"]
@@ -53,11 +54,11 @@ impl Client {
             // log::debug!("向扫码服务器发送的url为{}", send_url);
             // let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
             std::thread::sleep(core::time::Duration::from_millis(1000));
-            
+
             let res: ResponseData = self.client.get(queryUrl).query(&form).send()?.json()?;
-            log::info!("{}",res.data.message);
+            log::info!("{}", res.data.message);
             log::debug!("{:#?}", res);
-            assert!(res.code == 0 ,"error ");
+            assert!(res.code == 0, "error ");
             let data = res.data;
             log::debug!("{:#?}", data);
             match data {
@@ -68,9 +69,7 @@ impl Client {
                 LoginInfo { code: 86038, .. } => {
                     bail!("二维码已失效")
                 }
-                _ => {
-                    
-                }
+                _ => {}
             }
 
             // for cookie in res.cookies(){
@@ -79,15 +78,34 @@ impl Client {
         }
     }
     pub fn get_qrcode(&self) -> Result<Value> {
-        let loginUrl = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate";
-        Ok(self.client.get(loginUrl).send()?.json()?)
+        let login_url = "https://passport.bilibili.com/x/passport-login/web/qrcode/generate";
+
+        Ok(self.client.get(login_url).send()?.json()?)
     }
+    // fn set_cookie(&self, cookie_info: &LoginInfo) {
+    //     let mut store = self.cookie_store.lock().unwrap();
+    //     for cookie in cookie_info["cookies"].as_array().unwrap() {
+    //         let cookie = Cookie::build(
+    //             cookie["name"].as_str().unwrap(),
+    //             cookie["value"].as_str().unwrap(),
+    //         )
+    //         .domain("bilibili.com")
+    //         .finish();
+    //         store
+    //             .insert_raw(&cookie, &Url::parse("https://bilibili.com/").unwrap())
+    //             .unwrap();
+    //     }
+    // }
+    // pub fn login_by_cookies(&self, file: std::fs::File) -> Result<LoginInfo> {
+    //     let login_info: LoginInfo = serde_json::from_reader(std::io::BufReader::new(file))?;
+    //     self.set_cookie(&login_info);
+    // }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct LoginInfo {
     pub code: i32,
-    url: String,
+    pub url: String,
     refresh_token: String,
     timestamp: u64,
     pub message: String, // pub token_info: TokenInfo,

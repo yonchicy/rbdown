@@ -53,10 +53,11 @@ impl Client {
             // log::debug!("向扫码服务器发送的url为{}", send_url);
             // let ret_txt = reqwest::blocking::get(send_url).unwrap().text().unwrap();
             std::thread::sleep(core::time::Duration::from_millis(1000));
-            log::debug!("尝试获取二维码扫描结果");
+            
             let res: ResponseData = self.client.get(queryUrl).query(&form).send()?.json()?;
+            log::info!("{}",res.data.message);
             log::debug!("{:#?}", res);
-            assert_eq!(res.code,0);
+            assert!(res.code == 0 ,"error ");
             let data = res.data;
             log::debug!("{:#?}", data);
             match data {
@@ -68,7 +69,7 @@ impl Client {
                     bail!("二维码已失效")
                 }
                 _ => {
-                    log::info!("等待扫码")
+                    
                 }
             }
 
@@ -85,11 +86,11 @@ impl Client {
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct LoginInfo {
+    pub code: i32,
     url: String,
     refresh_token: String,
-    timestamp: u32,
-    pub code: i32,
-    message: String, // pub token_info: TokenInfo,
+    timestamp: u64,
+    pub message: String, // pub token_info: TokenInfo,
 }
 #[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct TokenInfo {

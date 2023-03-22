@@ -1,3 +1,4 @@
+use core::panic;
 use std::fmt::Debug;
 
 use log;
@@ -18,12 +19,15 @@ fn main() {
         .subcommand(Command::new("login").about("login by QR code"))
         .get_matches();
     // You can check the value provided by positional arguments, or option arguments
-    match matches.subcommand() {
+    let info = match matches.subcommand() {
         Some(("login",_)) => {
-            login_by_qrcode(client);
+            login_by_qrcode(client).unwrap()
         },
-        _ => {}
-    }
+        _ => {panic!("")}
+    };
+    let file = std::fs::File::create("cookie.json").unwrap();
+    serde_json::to_writer_pretty(&file, &info).unwrap();
+    println!("登陆成功");
     if let Some(bv) = matches.get_one::<String>("url") {
         log::info!("要下载的bv号是:{}",bv);
         download_vedio(bv);
